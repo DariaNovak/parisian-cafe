@@ -1,0 +1,69 @@
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/600.css';
+@import '@fontsource/cormorant-garamond/500-italic.css';
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import 'tailwindcss';
+
+@theme {
+  --color-cream: #f5ebdd;
+  --color-beige: #e8d5c0;
+  --color-rose: #e9bfc4;
+  --color-sage: #a8b5a0;
+  --color-terracotta: #c77d62;
+  --color-espresso: #382820;
+  --color-gold: #ffd9a0;
+  --font-serif: 'Cormorant Garamond', 'Georgia', serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --shadow-soft: 0 10px 40px -12px rgb(56 40 32 / 0.35);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #f5ebdd;
+    color: #382820;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+  }
+  canvas {
+    touch-action: none;
+  }
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid #c77d62;
+    outline-offset: 2px;
+  }
+}
+
+/* Custom utilities (declared with @utility so responsive/state variants work, e.g. sm:glass-panel). */
+
+/** Frosted cream glass used by all floating panels. */
+@utility glass-panel {
+  background: rgb(245 235 221 / 0.8);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border: 1px solid rgb(255 255 255 / 0.55);
+  box-shadow: var(--shadow-soft);
+}
+
+@utility chip {
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+@utility scroll-soft {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(56 40 32 / 0.25) transparent;
+}
