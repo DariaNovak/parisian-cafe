@@ -153,7 +153,7 @@ export function OrderConfirmation() {
                 <motion.path d="M14 27 l8 8 l16 -18" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.45, duration: 0.5 }} />
               </svg>
             </motion.div>
-            <p className="mt-5 text-[0.7rem] font-semibold tracking-[0.25em] text-terracotta uppercase">Merci beaucoup</p>
+            <p className="mt-5 text-[0.7rem] font-semibold tracking-[0.25em] text-terracotta uppercase">Thank you</p>
             <h2 className="font-serif text-4xl font-semibold">Order confirmed</h2>
             <p className="mt-2 text-sm text-espresso/65">
               Order <span className="font-semibold text-espresso">#{orderNumber}</span> is being prepared. Your table is waiting on the terrace.
