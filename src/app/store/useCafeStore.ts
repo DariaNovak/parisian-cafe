@@ -17,6 +17,29 @@ export interface InspectInfo {
   subtitle: string
 }
 
+export interface AudioSettings {
+  /** Background musette waltz. */
+  music: boolean
+  /** 0..1 */
+  musicVolume: number
+  /** Murmur of the café and clinking cups. */
+  ambience: boolean
+  /** Interface and gameplay sounds: bells, guests' voices, the till. */
+  effects: boolean
+}
+
+const AUDIO_KEY = 'parisian-cafe:audio'
+const DEFAULT_AUDIO: AudioSettings = { music: true, musicVolume: 0.7, ambience: true, effects: true }
+
+function loadAudio(): AudioSettings {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AUDIO_KEY) ?? 'null')
+    return saved && typeof saved === 'object' ? { ...DEFAULT_AUDIO, ...saved } : DEFAULT_AUDIO
+  } catch {
+    return DEFAULT_AUDIO
+  }
+}
+
 interface CafeState {
   ready: boolean
   view: CameraViewId
@@ -25,7 +48,8 @@ interface CafeState {
   resetNonce: number
   panel: PanelId
   quality: QualityLevel
-  soundOn: boolean
+  /** Audio preferences (remembered between visits). */
+  audio: AudioSettings
   hint: string | null
   inspect: InspectInfo | null
   doorOpen: boolean
@@ -41,7 +65,7 @@ interface CafeState {
   openPanel: (panel: PanelId) => void
   closePanel: () => void
   setQuality: (q: QualityLevel) => void
-  toggleSound: () => void
+  setAudio: (change: Partial<AudioSettings>) => void
   setHint: (hint: string | null) => void
   clearInspect: () => void
   toggleDoor: () => void
@@ -57,7 +81,7 @@ export const useCafeStore = create<CafeState>()((set) => ({
   resetNonce: 0,
   panel: 'none',
   quality: detectQuality(),
-  soundOn: false,
+  audio: loadAudio(),
   hint: null,
   inspect: null,
   doorOpen: false,
@@ -71,7 +95,16 @@ export const useCafeStore = create<CafeState>()((set) => ({
   openPanel: (panel) => set({ panel }),
   closePanel: () => set({ panel: 'none' }),
   setQuality: (quality) => set({ quality }),
-  toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+  setAudio: (change) =>
+    set((s) => {
+      const audio = { ...s.audio, ...change }
+      try {
+        localStorage.setItem(AUDIO_KEY, JSON.stringify(audio))
+      } catch {
+        /* storage unavailable: settings just won't persist */
+      }
+      return { audio }
+    }),
   setHint: (hint) => set({ hint }),
   clearInspect: () => set({ inspect: null }),
   toggleDoor: () => set((s) => ({ doorOpen: !s.doorOpen })),
