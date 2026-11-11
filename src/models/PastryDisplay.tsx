@@ -119,6 +119,10 @@ export function PastryDisplay() {
     <group>
       {/* Cabinet base: walnut with panels and brass kick plate */}
       <Box min={[D.minX, LAYOUT.floorY, BACK_Z]} max={[D.maxX, BASE_TOP, D.frontZ]} material={MATERIALS.darkWood} />
+      {/* Staff side: sliding oak doors */}
+      {[0.27, 0.73].map((f) => (
+        <Box key={`back-${f}`} position={[D.minX + w * f, LAYOUT.floorY + (BASE_TOP - LAYOUT.floorY) / 2, BACK_Z - 0.012]} size={[w * 0.44, (BASE_TOP - LAYOUT.floorY) * 0.86, 0.024]} material={MATERIALS.trimCream} />
+      ))}
       {[0.25, 0.75].map((f) => (
         <Box key={f} position={[D.minX + w * f, LAYOUT.floorY + D.baseHeight / 2, D.frontZ + 0.012]} size={[w * 0.44, D.baseHeight * 0.62, 0.025]} material={MATERIALS.walnut} />
       ))}

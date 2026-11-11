@@ -5,15 +5,19 @@ import { Box } from './primitives'
 import { MergeStatic, NO_MERGE } from '../components/three/MergeStatic'
 
 /** Machine-local anchor points (origin = counter top under the machine, facing +Z). */
+/** How far the group heads stand out from the machine's centre (the body's front face is at 0.22). */
+const GROUP_Z = 0.36
+
 export const MACHINE = {
   brewGroupX: -0.13,
   spoutY: 0.178,
-  cupSpot: [-0.13, 0.068, 0.23] as [number, number, number],
+  /** Under the working group head, far enough out that even the widest saucer clears the body (front face z = 0.22). */
+  cupSpot: [-0.13, 0.068, GROUP_Z] as [number, number, number],
   /** On the counter in front of the machine: milk is poured and art is drawn here. */
-  pourSpot: [0.02, 0.0, 0.4] as [number, number, number],
-  wandTip: [0.33, 0.14, 0.25] as [number, number, number],
-  pitcherRest: [0.5, 0, 0.1] as [number, number, number],
-  traySpot: [0, 0.068, 0.2] as [number, number, number],
+  pourSpot: [0.57, 0.0, GROUP_Z] as [number, number, number],
+  wandTip: [0.38, 0.14, 0.29] as [number, number, number],
+  pitcherRest: [0.66, 0, 0.03] as [number, number, number],
+  traySpot: [0, 0.068, GROUP_Z] as [number, number, number],
 }
 
 export const LACQUER = new MeshPhysicalMaterial({ color: '#E3A9B1', roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.12 })
@@ -115,21 +119,30 @@ export const EspressoMachine = forwardRef<MachineParts>(function EspressoMachine
       </mesh>
       {/* Two group heads; the left one has the working portafilter */}
       {[-0.13, 0.13].map((x) => (
-        <mesh key={x} material={MATERIALS.steel} position={[x, 0.25, 0.25]} castShadow>
-          <cylinderGeometry args={[0.048, 0.04, 0.06, 24]} />
-        </mesh>
+        <group key={x}>
+          {/* Chrome neck carrying the group head out from the body */}
+          <mesh material={MATERIALS.chrome} position={[x, 0.27, (0.22 + GROUP_Z) / 2]} rotation-x={Math.PI / 2} castShadow>
+            <cylinderGeometry args={[0.024, 0.03, GROUP_Z - 0.22, 16]} />
+          </mesh>
+          <mesh material={MATERIALS.steel} position={[x, 0.25, GROUP_Z]} castShadow>
+            <cylinderGeometry args={[0.048, 0.04, 0.06, 24]} />
+          </mesh>
+        </group>
       ))}
       {[-0.13, 0.13].map((x, i) => (
-        <group key={x} ref={i === 0 ? portafilter : undefined} userData={i === 0 ? NO_MERGE : undefined} position={[x, 0.205, 0.25]}>
+        <group key={x} ref={i === 0 ? portafilter : undefined} userData={i === 0 ? NO_MERGE : undefined} position={[x, 0.205, GROUP_Z]}>
           <mesh material={MATERIALS.steel} castShadow>
             <cylinderGeometry args={[0.042, 0.036, 0.03, 24]} />
           </mesh>
-          <mesh material={MATERIALS.chrome} position={[0, -0.002, 0.08]} rotation-x={Math.PI / 2}>
-            <cylinderGeometry args={[0.008, 0.01, 0.09, 10]} />
-          </mesh>
-          <mesh material={MATERIALS.darkWood} position={[0, -0.004, 0.16]} rotation-x={Math.PI / 2} castShadow>
-            <capsuleGeometry args={[0.014, 0.07, 6, 12]} />
-          </mesh>
+          {/* Handle points out toward the barista, splayed to the outside so it never hangs over the cup. */}
+          <group position={[0, 0, 0.035]} rotation={[-0.12, i === 0 ? -0.6 : 0.3, 0]} rotation-order="YXZ">
+            <mesh material={MATERIALS.chrome} position={[0, 0, 0.04]} rotation-x={Math.PI / 2}>
+              <cylinderGeometry args={[0.008, 0.01, 0.08, 10]} />
+            </mesh>
+            <mesh material={MATERIALS.darkWood} position={[0, 0, 0.11]} rotation-x={Math.PI / 2} castShadow>
+              <capsuleGeometry args={[0.014, 0.06, 6, 12]} />
+            </mesh>
+          </group>
           {[-0.012, 0.012].map((sx) => (
             <mesh key={sx} material={MATERIALS.chrome} position={[sx, -0.022, 0]}>
               <cylinderGeometry args={[0.004, 0.005, 0.016, 8]} />
@@ -139,17 +152,17 @@ export const EspressoMachine = forwardRef<MachineParts>(function EspressoMachine
       ))}
       {/* Espresso streams (scaled in Y while brewing; unit height, top-anchored) */}
       {[-0.012, 0.012].map((sx, i) => (
-        <mesh key={sx} ref={i === 0 ? streamA : streamB} userData={NO_MERGE} material={MATERIALS.coffeeBean} position={[MACHINE.brewGroupX + sx, MACHINE.spoutY, 0.25]} scale={[1, 0.0001, 1]} visible={false}>
+        <mesh key={sx} ref={i === 0 ? streamA : streamB} userData={NO_MERGE} material={MATERIALS.coffeeBean} position={[MACHINE.brewGroupX + sx, MACHINE.spoutY, GROUP_Z]} scale={[1, 0.0001, 1]} visible={false}>
           <cylinderGeometry args={[0.0022, 0.0016, 1, 6]} />
         </mesh>
       ))}
       {/* Drip tray with grill */}
-      <Box position={[0, 0.052, 0.2]} size={[0.62, 0.03, 0.2]} material={MATERIALS.steel} />
+      <Box position={[0, 0.052, 0.33]} size={[0.62, 0.03, 0.26]} material={MATERIALS.steel} />
       {Array.from({ length: 9 }, (_, i) => (
-        <Box key={i} position={[-0.26 + i * 0.065, 0.068, 0.2]} size={[0.008, 0.004, 0.18]} material={MATERIALS.iron} cast={false} />
+        <Box key={i} position={[-0.26 + i * 0.065, 0.068, 0.33]} size={[0.008, 0.004, 0.23]} material={MATERIALS.iron} cast={false} />
       ))}
       {/* Steam wand on a ball joint */}
-      <group ref={wand} userData={NO_MERGE} position={[0.3, 0.32, 0.2]} rotation={[0, 0, 0.15]}>
+      <group ref={wand} userData={NO_MERGE} position={[0.35, 0.32, 0.24]} rotation={[0, 0, 0.15]}>
         <mesh material={MATERIALS.chrome}>
           <sphereGeometry args={[0.016, 12, 10]} />
         </mesh>

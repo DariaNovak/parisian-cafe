@@ -125,6 +125,22 @@ export function Counter({ machine, grinder }: { machine: ReactNode; grinder: Rea
       {[C.minX + 0.3, cx, C.maxX - 0.3].map((x) => (
         <Box key={x} position={[x, floorY + 0.1, C.frontZ + 0.09]} size={[0.025, 0.14, 0.14]} material={MATERIALS.brass} cast={false} />
       ))}
+      {/* Barista side: oak cupboards, a steel under-counter fridge and brass pulls */}
+      {Array.from({ length: 6 }, (_, i) => {
+        const x = C.minX + (i + 0.5) * (w / 6)
+        const fridge = i === 2 || i === 3
+        return (
+          <group key={`back-${i}`}>
+            {/* Drawer below the worktop, cupboard (or fridge) door below that. */}
+            <Box position={[x, COUNTER_TOP - 0.13, BACK_Z - 0.012]} size={[w / 6 - 0.012, 0.16, 0.024]} material={MATERIALS.trimCream} />
+            <Box position={[x, floorY + 0.42, BACK_Z - 0.012]} size={[w / 6 - 0.012, 0.72, 0.024]} material={fridge ? MATERIALS.steel : MATERIALS.trimCream} />
+            <Box position={[x, COUNTER_TOP - 0.13, BACK_Z - 0.032]} size={[w / 14, 0.014, 0.018]} material={MATERIALS.brass} cast={false} />
+            <Box position={[x, floorY + 0.7, BACK_Z - 0.032]} size={[w / 10, 0.016, 0.02]} material={MATERIALS.brass} cast={false} />
+          </group>
+        )
+      })}
+      {/* Rubber mat the barista stands on */}
+      <Box min={[C.minX + 0.2, floorY, BACK_Z - 0.85]} max={[C.maxX - 0.2, floorY + 0.008, BACK_Z - 0.15]} material={MATERIALS.blackboard} cast={false} />
       {/* Back counter with cupboards */}
       <Box min={[-4.55, floorY, INTERIOR.minZ]} max={[2.0, floorY + 0.9, INTERIOR.minZ + 0.55]} material={MATERIALS.darkWood} />
       <Box min={[-4.58, floorY + 0.9, INTERIOR.minZ]} max={[2.03, floorY + 0.94, INTERIOR.minZ + 0.58]} material={MATERIALS.marble} />

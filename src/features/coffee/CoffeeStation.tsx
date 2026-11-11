@@ -4,7 +4,7 @@ import { CubicBezierCurve3, Group, Mesh, MeshStandardMaterial, Vector3 } from 't
 import { useCafeStore } from '../../app/store/useCafeStore'
 import { playSfx } from '../../audio/audioEngine'
 import { Steam } from '../../components/three/effects/Steam'
-import { ESPRESSO_POS, TRAY_POS } from '../../constants/layout'
+import { ESPRESSO_POS, ESPRESSO_ROTATION_Y, TRAY_POS } from '../../constants/layout'
 import { MATERIALS } from '../../materials'
 import { cupGeometry, cupMaterial, saucerGeometry, SURFACE_DISC, surfaceHeight, surfaceRadius } from '../../models/CoffeeCup'
 import { BEAN_FILL_GEO, Grinder } from '../../models/Counter'
@@ -13,19 +13,20 @@ import { usePhysicsStore } from '../../physics/usePhysicsStore'
 import { createCoffeeSurfaceMaterial } from '../../shaders/coffee/coffeeSurface'
 import { damp, lerp, progress, smoothstep } from '../../utils/math'
 import { useOrderStore } from '../ordering/useOrderStore'
+import { useShiftStore } from '../shift/useShiftStore'
 import { ART_INDEX, COFFEES, CUPS, PHASE_DURATION, type BrewPhase } from './coffeeConfig'
 import { phaseProgress, useCoffeeStore } from './useCoffeeStore'
 
 const SAUCER_LIFT = 0.007
 const NEEDLE_REST = 2.2
 const NEEDLE_9_BAR = -0.45
-/** Tray position in machine-local space (the station group sits at ESPRESSO_POS). */
-const TRAY_LOCAL = new Vector3(TRAY_POS[0] - ESPRESSO_POS[0], TRAY_POS[1] - ESPRESSO_POS[1] + 0.012, TRAY_POS[2] - ESPRESSO_POS[2])
+/** Tray position in machine-local space (the station group sits at ESPRESSO_POS, turned by ESPRESSO_ROTATION_Y). */
+const TRAY_LOCAL = new Vector3(TRAY_POS[0] - ESPRESSO_POS[0], TRAY_POS[1] - ESPRESSO_POS[1] + 0.012, TRAY_POS[2] - ESPRESSO_POS[2]).applyAxisAngle(new Vector3(0, 1, 0), -ESPRESSO_ROTATION_Y)
 const CUP_SPOT = new Vector3(...MACHINE.cupSpot)
 /** After extraction the cup is slid out onto the counter, where milk is poured. */
 const POUR_SPOT = new Vector3(...MACHINE.pourSpot)
 /** Arc the finished cup follows from the counter to the serving tray. */
-const SERVE_PATH = new CubicBezierCurve3(POUR_SPOT, POUR_SPOT.clone().add(new Vector3(0.3, 0.22, 0.15)), TRAY_LOCAL.clone().add(new Vector3(0, 0.25, 0.2)), TRAY_LOCAL)
+const SERVE_PATH = new CubicBezierCurve3(POUR_SPOT, POUR_SPOT.clone().lerp(TRAY_LOCAL, 0.3).add(new Vector3(0, 0.42, 0.22)), TRAY_LOCAL.clone().add(new Vector3(0, 0.3, 0.2)), TRAY_LOCAL)
 const UNDER_GROUP_PHASES: BrewPhase[] = ['select', 'grinding', 'brewing']
 const PITCHER_REST = new Vector3(...MACHINE.pitcherRest)
 const PITCHER_UNDER_WAND = new Vector3(MACHINE.wandTip[0] + 0.005, MACHINE.wandTip[1] - 0.085, MACHINE.wandTip[2])
@@ -70,7 +71,8 @@ function pitcherTarget(phase: BrewPhase, p: number, cupHeight: number, cupPos: V
     case 'pouring-milk':
     case 'art':
     case 'drawing-art': {
-      out.set(cupPos.x + 0.085, cupPos.y + SAUCER_LIFT + cupHeight + 0.02, cupPos.z)
+      // Held beside and above the rim: tilting swings the pitcher's base down, so it needs this clearance to stay out of the cup.
+      out.set(cupPos.x + 0.09, cupPos.y + SAUCER_LIFT + cupHeight + 0.04, cupPos.z)
       if (phase === 'pouring-milk') return 1.05 * smoothstep(0.25, 0.4, p) * (1 - smoothstep(0.9, 1, p))
       if (phase === 'drawing-art') {
         // The barista lowers the pitcher and wiggles it to draw the pattern.
@@ -127,9 +129,14 @@ export function CoffeeStation() {
         const n = usePhysicsStore.getState().bodies.filter((b) => b.kind === 'coffee').length
         // Coffees occupy the left half of the tray (desserts use the right half).
         const dz = n % 2 ? 0.07 : -0.07
-        usePhysicsStore.getState().spawn({ kind: 'coffee', coffee: s.coffee, cup: s.cup, art: s.art, position: [TRAY_POS[0] - 0.15, TRAY_POS[1] + 0.06 + (n % 3) * 0.04, TRAY_POS[2] + dz] })
-        useOrderStore.getState().addCoffee(s.coffee, s.cup, s.art)
-        useCafeStore.getState().notify(`${COFFEES[s.coffee].label} served on the tray · added to your order`)
+        const bodyId = usePhysicsStore.getState().spawn({ kind: 'coffee', coffee: s.coffee, cup: s.cup, art: s.art, position: [TRAY_POS[0] - 0.15, TRAY_POS[1] + 0.06 + (n % 3) * 0.04, TRAY_POS[2] + dz] })
+        if (useShiftStore.getState().active) {
+          // Working the shift: the cup is for the guest at the till, not the visitor's own order.
+          useShiftStore.getState().addToTray({ kind: 'coffee', bodyId, coffee: s.coffee, cup: s.cup, art: s.art })
+        } else {
+          useOrderStore.getState().addCoffee(s.coffee, s.cup, s.art)
+          useCafeStore.getState().notify(`${COFFEES[s.coffee].label} served on the tray · added to your order`)
+        }
       }
       s.advance()
       return
@@ -177,7 +184,7 @@ export function CoffeeStation() {
       u.uArtProgress.value = s.phase === 'drawing-art' ? p : s.art === 'none' ? 0 : 1
 
       // Steam rises from the cup once there is hot coffee in it.
-      cupSteam.value = damp(cupSteam.value, liquid.fill > 0.1 ? 0.75 : 0, 2, dt)
+      cupSteam.value = damp(cupSteam.value, liquid.fill > 0.1 ? 0.5 : 0, 2, dt)
       cupSteamPos.current!.position.copy(cg.position)
       cupSteamPos.current!.position.y += SAUCER_LIFT + surfaceHeight(cup, liquid.fill)
     } else {
@@ -208,7 +215,7 @@ export function CoffeeStation() {
     PILOT_LIGHT.emissiveIntensity = s.phase === 'select' ? 0.6 : 1.5 + Math.sin(t * 6) * 0.5
 
     // --- Portafilter locks in (small twist) while grinding/brewing ----------
-    if (m.portafilter) m.portafilter.rotation.y = damp(m.portafilter.rotation.y, s.phase === 'grinding' ? 0.5 : 0, 5, dt)
+    if (m.portafilter) m.portafilter.rotation.y = damp(m.portafilter.rotation.y, s.phase === 'grinding' ? 0.28 : 0, 5, dt)
 
     // --- Steam wand + pitcher + milk stream -----------------------------------
     if (m.wand) m.wand.rotation.z = damp(m.wand.rotation.z, s.phase === 'steaming' ? 0.02 : 0.15, 5, dt)
@@ -238,7 +245,7 @@ export function CoffeeStation() {
   })
 
   return (
-    <group position={ESPRESSO_POS}>
+    <group position={ESPRESSO_POS} rotation={[0, ESPRESSO_ROTATION_Y, 0]}>
       <EspressoMachine ref={parts} />
       {/* The cup being prepared */}
       <group ref={cupGroup} visible={false}>
@@ -246,9 +253,9 @@ export function CoffeeStation() {
         <mesh ref={surface} geometry={SURFACE_DISC} material={surfaceMat} visible={false} />
       </group>
       <group ref={cupSteamPos}>
-        <Steam intensity={cupSteam} count={22} height={0.2} size={0.05} />
+        <Steam intensity={cupSteam} count={26} height={0.18} size={0.032} />
       </group>
-      <Steam position={MACHINE.wandTip} intensity={wandSteam} count={60} radius={0.01} height={0.32} spread={0.07} size={0.08} speed={0.9} />
+      <Steam position={MACHINE.wandTip} intensity={wandSteam} count={60} radius={0.01} height={0.3} spread={0.07} size={0.055} speed={0.9} />
     </group>
   )
 }
