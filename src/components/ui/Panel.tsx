@@ -23,7 +23,7 @@ export function Panel({ eyebrow, title, onClose, children, footer }: PanelProps)
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 24, scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-      className="glass-panel pointer-events-auto fixed inset-x-3 bottom-3 z-30 flex max-h-[55vh] flex-col overflow-hidden rounded-3xl md:inset-x-auto md:top-40 md:right-5 md:bottom-auto md:max-h-[calc(100vh-12rem)] md:w-[380px] lg:top-24 lg:max-h-[calc(100vh-8rem)]"
+      className="glass-panel pointer-events-auto fixed inset-x-3 bottom-3 z-30 flex max-h-[55vh] flex-col overflow-hidden rounded-3xl md:inset-x-auto md:top-40 md:right-5 md:bottom-auto md:max-h-[calc(100vh-12rem)] md:w-[380px] xl:top-24 xl:max-h-[calc(100vh-8rem)]"
     >
       <header className="flex items-start justify-between gap-3 px-6 pt-5 pb-3">
         <div>

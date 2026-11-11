@@ -1,11 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Coffee, CakeSlice, RotateCcw, ShoppingBag, SlidersHorizontal, Volume2, VolumeX } from 'lucide-react'
+import { Coffee, CakeSlice, RotateCcw, ShoppingBag, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useCafeStore } from '../../app/store/useCafeStore'
-import { setAudioEnabled } from '../../audio/audioEngine'
+import { AudioMenu, useAudioSettings } from './AudioMenu'
 import { QUALITY_PRESETS, type QualityLevel } from '../../constants/quality'
 import { LISTED_VIEWS } from '../../features/navigation/cameraViews'
 import { itemCount, useOrderStore } from '../../features/ordering/useOrderStore'
+import { useShiftStore } from '../../features/shift/useShiftStore'
+import { ShiftStats, ShiftToggle } from './ShiftHud'
 
 function Logo() {
   return (
@@ -21,14 +23,23 @@ function Logo() {
   )
 }
 
+/** Work places behind the counter, shown instead of the viewpoints during a shift. */
+const STATIONS = [
+  { id: 'barista' as const, label: 'Till' },
+  { id: 'coffee' as const, label: 'Espresso' },
+  { id: 'pastry' as const, label: 'Pastries' },
+]
+
 function ViewSelector() {
   const view = useCafeStore((s) => s.view)
   const focus = useCafeStore((s) => s.focus)
   const goToView = useCafeStore((s) => s.goToView)
   const resetCamera = useCafeStore((s) => s.resetCamera)
+  const shift = useShiftStore((s) => s.active)
+  const views = shift ? STATIONS : LISTED_VIEWS
   return (
     <nav aria-label="Camera views" className="glass-panel pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-full p-1">
-      {LISTED_VIEWS.map((v) => {
+      {views.map((v) => {
         const active = v.id === view && !focus
         return (
           <button key={v.id} onClick={() => goToView(v.id)} className={`chip relative whitespace-nowrap ${active ? 'text-cream' : 'text-espresso/75 hover:text-espresso'}`}>
@@ -37,10 +48,10 @@ function ViewSelector() {
           </button>
         )
       })}
-      <span className="mx-1 h-5 w-px bg-espresso/15" />
-      <button onClick={resetCamera} title="Reset camera" aria-label="Reset camera" className="rounded-full p-2 text-espresso/70 transition hover:bg-espresso/8 hover:text-espresso">
+      {!shift && <span className="mx-1 h-5 w-px bg-espresso/15" />}
+      {!shift && <button onClick={resetCamera} title="Reset camera" aria-label="Reset camera" className="rounded-full p-2 text-espresso/70 transition hover:bg-espresso/8 hover:text-espresso">
         <RotateCcw size={16} />
-      </button>
+      </button>}
     </nav>
   )
 }
@@ -78,7 +89,7 @@ function QualityMenu() {
   )
 }
 
-function IconButton({ label, onClick, children, active = false }: { label: string; onClick: () => void; children: React.ReactNode; active?: boolean }) {
+export function IconButton({ label, onClick, children, active = false }: { label: string; onClick: () => void; children: React.ReactNode; active?: boolean }) {
   return (
     <motion.button
       whileHover={{ y: -1 }}
@@ -125,46 +136,50 @@ function OrderButton() {
 
 /** Top bar: logo, view selector, quick actions. */
 export function Navigation() {
-  const soundOn = useCafeStore((s) => s.soundOn)
-  const toggleSound = useCafeStore((s) => s.toggleSound)
   const panel = useCafeStore((s) => s.panel)
   const openPanel = useCafeStore((s) => s.openPanel)
   const goToView = useCafeStore((s) => s.goToView)
 
-  useEffect(() => setAudioEnabled(soundOn), [soundOn])
+  useAudioSettings()
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-20 flex flex-col gap-3 p-3 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-20 flex flex-col gap-3 p-3 sm:p-5 xl:flex-row xl:items-center xl:justify-between">
       <div className="flex items-center justify-between gap-3">
         <Logo />
-        <div className="pointer-events-auto flex items-center gap-2 lg:hidden">
-          <QuickActions soundOn={soundOn} toggleSound={toggleSound} panel={panel} openPanel={openPanel} goToView={goToView} />
+        <div className="pointer-events-auto flex items-center gap-2 xl:hidden">
+          <QuickActions panel={panel} openPanel={openPanel} goToView={goToView} />
         </div>
       </div>
-      <div className="flex justify-center lg:absolute lg:left-1/2 lg:-translate-x-1/2">
+      <div className="flex justify-center xl:absolute xl:left-1/2 xl:-translate-x-1/2">
         <ViewSelector />
       </div>
-      <div className="pointer-events-auto hidden items-center gap-2 lg:flex">
-        <QuickActions soundOn={soundOn} toggleSound={toggleSound} panel={panel} openPanel={openPanel} goToView={goToView} />
+      <div className="pointer-events-auto hidden items-center gap-2 xl:flex">
+        <QuickActions panel={panel} openPanel={openPanel} goToView={goToView} />
       </div>
     </header>
   )
 }
 
-function QuickActions({ soundOn, toggleSound, panel, openPanel, goToView }: { soundOn: boolean; toggleSound: () => void; panel: string; openPanel: (p: 'coffee' | 'desserts') => void; goToView: (v: 'coffee' | 'pastry') => void }) {
+function QuickActions({ panel, openPanel, goToView }: { panel: string; openPanel: (p: 'coffee' | 'desserts') => void; goToView: (v: 'coffee' | 'pastry') => void }) {
+  const shift = useShiftStore((s) => s.active)
   return (
     <>
-      <IconButton label="Make a coffee" active={panel === 'coffee'} onClick={() => { openPanel('coffee'); goToView('coffee') }}>
-        <Coffee size={18} />
-      </IconButton>
-      <IconButton label="Browse desserts" active={panel === 'desserts'} onClick={() => { openPanel('desserts'); goToView('pastry') }}>
-        <CakeSlice size={18} />
-      </IconButton>
-      <IconButton label={soundOn ? 'Mute ambience' : 'Play café ambience'} onClick={toggleSound} active={soundOn}>
-        {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
-      </IconButton>
-      <QualityMenu />
-      <OrderButton />
+      <ShiftToggle />
+      {/* During a shift the ticket has its own Brew / Fetch buttons, so phones drop these to save room. */}
+      <span className={shift ? 'hidden sm:contents' : 'contents'}>
+        <IconButton label="Make a coffee" active={panel === 'coffee'} onClick={() => { openPanel('coffee'); goToView('coffee') }}>
+          <Coffee size={18} />
+        </IconButton>
+        <IconButton label="Browse desserts" active={panel === 'desserts'} onClick={() => { openPanel('desserts'); goToView('pastry') }}>
+          <CakeSlice size={18} />
+        </IconButton>
+      </span>
+      <AudioMenu />
+      {/* Quality is auto-detected; phones keep the bar uncluttered. */}
+      <span className="hidden sm:contents">
+        <QualityMenu />
+      </span>
+      {shift ? <ShiftStats /> : <OrderButton />}
     </>
   )
 }

@@ -1,6 +1,6 @@
 import { COUNTER_TOP, ESPRESSO_POS } from '../../constants/layout'
 
-export type CameraViewId = 'exterior' | 'terrace' | 'interior' | 'coffee' | 'pastry'
+export type CameraViewId = 'exterior' | 'terrace' | 'interior' | 'coffee' | 'pastry' | 'barista'
 
 export interface CameraView {
   id: CameraViewId
@@ -53,15 +53,25 @@ export const CAMERA_VIEWS: Record<CameraViewId, CameraView> = {
   coffee: {
     id: 'coffee',
     label: 'Coffee Bar',
-    position: [ESPRESSO_POS[0] + 0.3, COUNTER_TOP + 0.62, ESPRESSO_POS[2] + 1.12],
-    target: [ESPRESSO_POS[0] - 0.02, COUNTER_TOP + 0.1, ESPRESSO_POS[2] + 0.33],
+    position: [ESPRESSO_POS[0] - 0.45, COUNTER_TOP + 0.62, ESPRESSO_POS[2] - 1.2],
+    target: [ESPRESSO_POS[0] - 0.2, COUNTER_TOP + 0.1, ESPRESSO_POS[2] - 0.36],
     limits: { minDistance: 0.5, maxDistance: 2.6, minPolar: 30 * DEG, maxPolar: 95 * DEG },
     inside: true,
     listed: true,
   },
+  /** Behind the counter, looking out at the till and the queue (barista shift). */
+  barista: {
+    id: 'barista',
+    label: 'Till',
+    position: [-1.75, 2.35, -7.2],
+    target: [0.1, 1.0, -3.7],
+    limits: { minDistance: 1.2, maxDistance: 4.2, minPolar: 45 * DEG, maxPolar: 100 * DEG },
+    inside: true,
+    listed: false,
+  },
   pastry: {
     id: 'pastry',
-    label: 'Pâtisserie',
+    label: 'Pastries',
     position: [3.35, COUNTER_TOP + 0.55, -3.95],
     target: [3.35, COUNTER_TOP + 0.12, -5.9],
     limits: { minDistance: 0.9, maxDistance: 2.8, minPolar: 45 * DEG, maxPolar: 95 * DEG },

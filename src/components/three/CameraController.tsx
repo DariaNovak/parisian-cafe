@@ -1,10 +1,11 @@
 import { CameraControls, CameraControlsImpl } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { BoxGeometry, Mesh, MeshBasicMaterial, type Object3D } from 'three'
+import { BoxGeometry, Mesh, MeshBasicMaterial, Vector3, type Object3D } from 'three'
 import { useCafeStore } from '../../app/store/useCafeStore'
 import { INTERIOR } from '../../constants/layout'
 import { CAMERA_VIEWS } from '../../features/navigation/cameraViews'
+import { useShiftStore } from '../../features/shift/useShiftStore'
 
 const DEG = Math.PI / 180
 
@@ -59,11 +60,26 @@ export function CameraController() {
   const dragging = useCafeStore((s) => s.dragging)
   const colliders = useColliders()
   const aspect = useThree((s) => s.size.width / s.size.height)
+  const shift = useShiftStore((s) => s.active)
+  const camera = useThree((s) => s.camera)
+  const wasShift = useRef(false)
 
   // Fly to the active view / focus whenever it changes (or a reset is requested).
   useEffect(() => {
     const c = ref.current
     if (!c) return
+    // During a shift <BaristaCamera/> owns the camera (first person behind the counter).
+    c.enabled = !shift
+    if (shift) {
+      wasShift.current = true
+      return
+    }
+    if (wasShift.current) {
+      // Take over from wherever the barista was looking, then fly to the view.
+      wasShift.current = false
+      const fwd = camera.getWorldDirection(new Vector3()).multiplyScalar(2).add(camera.position)
+      void c.setLookAt(camera.position.x, camera.position.y, camera.position.z, fwd.x, fwd.y, fwd.z, false)
+    }
     const v = CAMERA_VIEWS[view]
     const target = focus ?? v
     const inside = focus ? focus.inside : v.inside
@@ -76,19 +92,19 @@ export function CameraController() {
     void c.setLookAt(...aspectAdjusted(target.position, target.target, aspect), ...target.target, true)
     // Walking in opens the door; returning to the street overview closes it.
     if (inside) useCafeStore.getState().setDoorOpen(true)
-    else if (view === 'exterior' && !focus) useCafeStore.getState().setDoorOpen(false)
-  }, [view, focus, resetNonce, colliders, aspect])
+    else if (view === 'exterior' && !focus && !useShiftStore.getState().active) useCafeStore.getState().setDoorOpen(false)
+  }, [view, focus, resetNonce, colliders, aspect, shift, camera])
 
   useEffect(() => {
-    if (ref.current) ref.current.enabled = !dragging
-  }, [dragging])
+    if (ref.current) ref.current.enabled = !dragging && !shift
+  }, [dragging, shift])
 
   // With a side panel open on wide screens, slide the framing left so the
   // subject isn't hidden behind the panel (focal offset keeps orbiting intact).
   const panel = useCafeStore((s) => s.panel)
   useEffect(() => {
     const c = ref.current
-    if (!c) return
+    if (!c || shift) return
     const wide = window.innerWidth >= 768
     // Use the destination framing's distance (not the in-flight one) so the shift is stable.
     const dest = focus ?? CAMERA_VIEWS[view]
@@ -96,7 +112,7 @@ export function CameraController() {
     const open = panel !== 'none'
     // Wide screens: panel on the right → shift framing left. Phones: bottom sheet → lift the subject.
     void c.setFocalOffset(open && wide ? distance * 0.2 : 0, open && !wide ? -distance * 0.3 : 0, 0, true)
-  }, [panel, view, focus])
+  }, [panel, view, focus, shift])
 
   return <CameraControls ref={ref} makeDefault smoothTime={0.55} draggingSmoothTime={0.12} dollySpeed={0.6} truckSpeed={0.8} />
 }

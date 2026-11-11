@@ -4,13 +4,15 @@ import { useEffect } from 'react'
 import { useCafeStore } from '../../app/store/useCafeStore'
 import { TABLES } from '../../constants/layout'
 import { dropSugarCubes } from '../../physics/actions'
+import { useShiftStore } from '../../features/shift/useShiftStore'
 
 /** Bottom-centre hint: what the hovered object does, or how to navigate. */
 export function InteractionHint() {
   const hint = useCafeStore((s) => s.hint)
   const ready = useCafeStore((s) => s.ready)
   const panel = useCafeStore((s) => s.panel)
-  const text = hint ?? 'Drag to look around · scroll to zoom · click glowing objects'
+  const shift = useShiftStore((s) => s.active)
+  const text = hint ?? (shift ? 'Drag to turn your head · click a guest, the machine or the cabinet' : 'Drag to look around · scroll to zoom · click glowing objects')
   return (
     <div className={`pointer-events-none fixed inset-x-0 bottom-5 z-10 justify-center px-4 ${panel !== 'none' ? 'hidden md:flex' : 'flex'}`}>
       <AnimatePresence mode="wait">
@@ -42,7 +44,7 @@ export function Toast() {
     return () => window.clearTimeout(t)
   }, [id])
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-28 z-30 flex justify-center px-4 lg:top-24">
+    <div className="pointer-events-none fixed inset-x-0 top-28 z-30 flex justify-center px-4 xl:top-24">
       <AnimatePresence>
         {toast && (
           <motion.div key={toast.id} initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10 }} className="rounded-full bg-espresso px-4 py-2 text-sm font-medium text-cream shadow-soft">
