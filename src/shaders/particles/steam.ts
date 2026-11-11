@@ -51,7 +51,7 @@ export function createSteamMaterial(opts: { height: number; spread: number; size
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
         // Perspective-correct size: grows as the puff rises and expands.
-        gl_PointSize = uSize * (0.4 + life * 1.6) * uPixelRatio / max(-mv.z, 0.05);
+        gl_PointSize = uSize * (0.6 + life * 1.8) * uPixelRatio / max(-mv.z, 0.05);
         vAlpha = smoothstep(0.0, 0.18, life) * (1.0 - smoothstep(0.45, 1.0, life)) * uIntensity;
         vSeed = aSeed;
       }`,
@@ -60,10 +60,12 @@ export function createSteamMaterial(opts: { height: number; spread: number; size
       varying float vSeed;
       void main() {
         vec2 c = gl_PointCoord - 0.5;
-        float d = length(c);
-        float wisp = 0.75 + 0.25 * sin(c.x * 9.0 + vSeed * 30.0) * sin(c.y * 7.0 - vSeed * 17.0);
-        float a = smoothstep(0.5, 0.05, d) * wisp * vAlpha * 0.38;
-        if (a < 0.003) discard;
+        float d2 = dot(c, c);
+        // Gaussian falloff that reaches zero well inside the sprite, so no puff has a visible edge.
+        float soft = exp(-d2 * 18.0) * (1.0 - smoothstep(0.16, 0.25, d2));
+        float wisp = 0.8 + 0.2 * sin(c.x * 9.0 + vSeed * 30.0) * sin(c.y * 7.0 - vSeed * 17.0);
+        float a = soft * wisp * vAlpha * 0.3;
+        if (a < 0.004) discard;
         gl_FragColor = vec4(vec3(1.0, 0.98, 0.95), a);
       }`,
   })

@@ -57,7 +57,7 @@ export function DraggableCup({ coffee, cup, art, position, rotationY = 0 }: Drag
   const radius = spec.radiusTop * 1.85 // saucer radius = footprint
   const halfH = (spec.height + 0.012) / 2
   const steamY = 0.007 + surfaceHeight(spec, fill)
-  const steamIntensity = useMemo(() => ({ value: 0.55 }), [])
+  const steamIntensity = useMemo(() => ({ value: 0.35 }), [])
 
   const end = () => {
     const d = drag.current
@@ -167,7 +167,7 @@ export function DraggableCup({ coffee, cup, art, position, rotationY = 0 }: Drag
           <CoffeeCup cupId={cup} fill={fill} surfaceMaterial={material} />
         </Select>
       </group>
-      <Steam position={[0, steamY, 0]} intensity={steamIntensity} count={14} height={0.18} size={0.045} speed={0.28} />
+      <Steam position={[0, steamY, 0]} intensity={steamIntensity} count={18} height={0.16} size={0.05} speed={0.22} />
     </RigidBody>
   )
 }
