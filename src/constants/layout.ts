@@ -26,8 +26,10 @@ export const LAYOUT = {
 /** Counter top surface height in world space. */
 export const COUNTER_TOP = LAYOUT.floorY + LAYOUT.counter.height
 
-/** Where the espresso machine stands on the counter. */
-export const ESPRESSO_POS: [number, number, number] = [-2.5, COUNTER_TOP, -6.05]
+/** Where the espresso machine stands on the counter. It faces the barista (−Z), like a real bar. */
+export const ESPRESSO_POS: [number, number, number] = [-2.5, COUNTER_TOP, -5.8]
+/** The machine is turned half a turn so its group head, wand and drip tray face the barista. */
+export const ESPRESSO_ROTATION_Y = Math.PI
 export const GRINDER_POS: [number, number, number] = [-3.85, COUNTER_TOP, -6.05]
 /** Serving tray for finished coffees and desserts. */
 export const TRAY_POS: [number, number, number] = [-0.7, COUNTER_TOP, -5.95]
@@ -58,3 +60,25 @@ export const PENDANTS = [
 ] as const satisfies ReadonlyArray<{ position: [number, number, number]; light: boolean }>
 
 export const INTERIOR = { minX: -5.85, maxX: 5.85, minZ: -7.85, maxZ: -0.3, ceiling: 4.08 } as const
+
+/** A bistro chair placement. Chairs face +Z in their local space. */
+export interface ChairSpot {
+  position: [number, number, number]
+  rotationY: number
+  tableIndex: number
+  outdoor: boolean
+}
+
+/** Chairs around every table: terrace chairs face the street, inside chairs face each other. */
+export const CHAIRS: ChairSpot[] = TABLES.flatMap((t, tableIndex): ChairSpot[] => {
+  const [x, y, z] = t.position
+  return t.outdoor
+    ? [
+        { position: [x - 0.32, y, z - 0.52] as [number, number, number], rotationY: 0.25, tableIndex, outdoor: true },
+        { position: [x + 0.34, y, z - 0.5] as [number, number, number], rotationY: -0.2, tableIndex, outdoor: true },
+      ]
+    : [
+        { position: [x - 0.58, y, z + 0.05] as [number, number, number], rotationY: Math.PI / 2 - 0.15, tableIndex, outdoor: false },
+        { position: [x + 0.58, y, z - 0.05] as [number, number, number], rotationY: -Math.PI / 2 + 0.1, tableIndex, outdoor: false },
+      ]
+})

@@ -1,11 +1,10 @@
-import { useMemo } from 'react'
 import { CylinderGeometry, LatheGeometry, MeshStandardMaterial, PlaneGeometry, TorusGeometry, Vector2 } from 'three'
 import { useCafeStore } from '../app/store/useCafeStore'
 import { Interactive } from '../components/three/interactions/Interactive'
-import { TABLES, TABLE_HEIGHT, type TableId } from '../constants/layout'
+import { CHAIRS, TABLES, TABLE_HEIGHT, type TableId } from '../constants/layout'
 import { MATERIALS } from '../materials'
 import { paperTexture } from '../materials/textures'
-import { InstancedModel, type InstanceTransform } from './ModelSource'
+import { InstancedModel } from './ModelSource'
 import { Flower } from './Plants'
 
 export const TABLE_TOP_RADIUS = 0.34
@@ -76,22 +75,6 @@ export function TableProps({ variant }: { variant: number }) {
   )
 }
 
-/** Chair placements around every table: terrace chairs face the street, inside chairs face each other. */
-function chairTransforms(): InstanceTransform[] {
-  const list: InstanceTransform[] = []
-  for (const t of TABLES) {
-    const [x, y, z] = t.position
-    if (t.outdoor) {
-      list.push({ position: [x - 0.32, y, z - 0.52], rotationY: 0.25 })
-      list.push({ position: [x + 0.34, y, z - 0.5], rotationY: -0.2 })
-    } else {
-      list.push({ position: [x - 0.58, y, z + 0.05], rotationY: Math.PI / 2 - 0.15 })
-      list.push({ position: [x + 0.58, y, z - 0.05], rotationY: -Math.PI / 2 + 0.1 })
-    }
-  }
-  return list
-}
-
 /** Camera framing used when a table is clicked. */
 export function tableFocus(id: TableId) {
   const t = TABLES.find((tb) => tb.id === id)!
@@ -106,7 +89,6 @@ export function tableFocus(id: TableId) {
 }
 
 export function Furniture() {
-  const chairs = useMemo(chairTransforms, [])
   const focusOn = useCafeStore((s) => s.focusOn)
   return (
     <group>
@@ -118,7 +100,7 @@ export function Furniture() {
           <TableProps variant={i} />
         </group>
       ))}
-      <InstancedModel model="chair" transforms={chairs} />
+      <InstancedModel model="chair" transforms={CHAIRS} />
     </group>
   )
 }
