@@ -17,14 +17,21 @@ let nextId = 1
 
 interface PhysicsState {
   bodies: SpawnedBody[]
-  spawn: (body: Spawn) => void
+  /** Adds a body and returns its id. */
+  spawn: (body: Spawn) => number
   spawnMany: (bodies: Spawn[]) => void
   clearKind: (kind: SpawnedBody['kind']) => void
+  remove: (ids: number[]) => void
 }
 
 export const usePhysicsStore = create<PhysicsState>()((set) => ({
   bodies: [],
-  spawn: (body) => set((s) => ({ bodies: [...s.bodies, { ...body, id: nextId++ } as SpawnedBody].slice(-MAX_BODIES) })),
+  spawn: (body) => {
+    const id = nextId++
+    set((s) => ({ bodies: [...s.bodies, { ...body, id } as SpawnedBody].slice(-MAX_BODIES) }))
+    return id
+  },
   spawnMany: (list) => set((s) => ({ bodies: [...s.bodies, ...list.map((b) => ({ ...b, id: nextId++ }) as SpawnedBody)].slice(-MAX_BODIES) })),
   clearKind: (kind) => set((s) => ({ bodies: s.bodies.filter((b) => b.kind !== kind) })),
+  remove: (ids) => set((s) => ({ bodies: s.bodies.filter((b) => !ids.includes(b.id)) })),
 }))

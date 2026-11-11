@@ -6,6 +6,8 @@ import { orderDessert } from '../../features/desserts/orderDessert'
 import { useDessertStore } from '../../features/desserts/useDessertStore'
 import { formatPrice, useOrderStore } from '../../features/ordering/useOrderStore'
 import { OptionCard, Panel, PrimaryButton } from './Panel'
+import { ShiftOrderBanner } from './ShiftHud'
+import { useShiftStore } from '../../features/shift/useShiftStore'
 
 /** Browse the pâtisserie cabinet and add desserts to the order. */
 export function DessertSelector() {
@@ -15,21 +17,23 @@ export function DessertSelector() {
   const items = useOrderStore((s) => s.items)
   const qtyOf = (id: string) => items.find((it) => it.kind === 'dessert' && it.dessert === id)?.qty ?? 0
   const spec = selected ? DESSERTS[selected] : null
+  const shift = useShiftStore((s) => s.active)
 
   return (
     <Panel
-      eyebrow="La pâtisserie"
-      title="Desserts du jour"
+      eyebrow="Pastry case"
+      title="Today's desserts"
       onClose={() => {
         closePanel()
         select(null)
       }}
       footer={
         <PrimaryButton onClick={() => spec && orderDessert(spec.id)} disabled={!spec}>
-          <Plus size={16} /> {spec ? `Add ${spec.label.toLowerCase()} · ${formatPrice(spec.price)}` : 'Select a dessert'}
+          <Plus size={16} /> {spec ? (shift ? `Place ${spec.label.toLowerCase()} on the tray` : `Add ${spec.label.toLowerCase()} · ${formatPrice(spec.price)}`) : 'Select a dessert'}
         </PrimaryButton>
       }
     >
+      <ShiftOrderBanner />
       <p className="mb-4 text-sm text-espresso/65">Tap a pastry here or in the glass cabinet. Added desserts are placed on the serving tray.</p>
       <div className="space-y-2">
         {DESSERT_LIST.map((d) => (

@@ -7,12 +7,13 @@ import { usePhysicsStore } from '../physics/usePhysicsStore'
 import { useDessertStore } from '../features/desserts/useDessertStore'
 import { orderDessert } from '../features/desserts/orderDessert'
 import { dropSugarCubes } from '../physics/actions'
+import { useShiftStore } from '../features/shift/useShiftStore'
 
 const handle: Record<string, unknown> = {}
 
 export function installDevtools() {
   if (!import.meta.env.DEV) return
-  Object.assign(handle, { cafe: useCafeStore, coffee: useCoffeeStore, order: useOrderStore, physics: usePhysicsStore, desserts: useDessertStore, orderDessert, dropSugarCubes })
+  Object.assign(handle, { cafe: useCafeStore, coffee: useCoffeeStore, order: useOrderStore, physics: usePhysicsStore, desserts: useDessertStore, shift: useShiftStore, orderDessert, dropSugarCubes })
   ;(window as unknown as { __cafe: unknown }).__cafe = handle
 }
 

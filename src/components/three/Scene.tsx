@@ -11,6 +11,7 @@ import { PastryDisplay } from '../../models/PastryDisplay'
 import { Plants } from '../../models/Plants'
 import { Street } from '../../models/Street'
 import { CameraController } from './CameraController'
+import { BaristaCamera } from './BaristaCamera'
 import { Lighting } from './Lighting'
 import { SceneEnvironment } from './SceneEnvironment'
 import { DustMotes } from './effects/DustMotes'
@@ -19,6 +20,8 @@ import { PostFX } from './effects/PostFX'
 import { Interactive } from './interactions/Interactive'
 import { MergeStatic } from './MergeStatic'
 import { preloadModels } from '../../models/ModelSource'
+import { StreetLife } from '../../features/people/StreetLife'
+import { Customers } from '../../features/shift/Customers'
 
 // Start fetching every GLB as soon as this chunk arrives.
 preloadModels()
@@ -53,6 +56,7 @@ export function Scene() {
       <SceneEnvironment />
       <Lighting />
       <CameraController />
+      <BaristaCamera />
       <Selection>
         {/* Static architecture & props are batched into a few merged draw calls. */}
         <MergeStatic>
@@ -65,6 +69,8 @@ export function Scene() {
           <Furniture />
           <Plants />
         </MergeStatic>
+        <StreetLife />
+        <Customers />
         <PhysicsWorld />
         <DustMotes />
         <FallingPetals />

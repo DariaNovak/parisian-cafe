@@ -7,6 +7,7 @@ import { InspectCard, InteractionHint, Toast } from '../components/ui/Interactio
 import { LoadingScreen } from '../components/ui/LoadingScreen'
 import { Navigation } from '../components/ui/Navigation'
 import { OrderConfirmation, OrderPanel } from '../components/ui/OrderPanel'
+import { ShiftFade, ShiftSummary, ShiftTicket, useShiftDirector } from '../components/ui/ShiftHud'
 import { useCafeStore } from './store/useCafeStore'
 
 function Panels() {
@@ -36,15 +37,19 @@ function useKeyboardShortcuts() {
 
 export default function App() {
   useKeyboardShortcuts()
+  useShiftDirector()
   return (
     <main className="relative h-full w-full select-none">
       <CanvasScene />
       <Navigation />
       <InteractionHint />
       <InspectCard />
+      <ShiftTicket />
       <Toast />
       <Panels />
       <OrderConfirmation />
+      <ShiftSummary />
+      <ShiftFade />
       <LoadingScreen />
     </main>
   )

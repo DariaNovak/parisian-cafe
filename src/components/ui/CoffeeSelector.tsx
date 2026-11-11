@@ -5,6 +5,7 @@ import { COFFEES, CUPS, LATTE_ARTS, PHASE_DURATION, PHASE_LABEL, type BrewPhase,
 import { useCoffeeStore } from '../../features/coffee/useCoffeeStore'
 import { formatPrice } from '../../features/ordering/useOrderStore'
 import { OptionCard, Panel, PrimaryButton } from './Panel'
+import { ShiftOrderBanner } from './ShiftHud'
 
 const CUP_SWATCH: Record<CupId, string> = { demitasse: '#FBF7F0', classic: '#E9BFC4', bowl: '#A8B5A0' }
 const ART_ICON: Record<Exclude<LatteArt, 'none'>, typeof Heart> = { heart: Heart, rosetta: Leaf, tulip: Sparkles }
@@ -181,7 +182,8 @@ export function CoffeeSelector() {
   )
 
   return (
-    <Panel eyebrow="Le comptoir" title={selecting ? 'Prepare a coffee' : 'Brewing'} onClose={closePanel} footer={footer}>
+    <Panel eyebrow="The counter" title={selecting ? 'Prepare a coffee' : 'Brewing'} onClose={closePanel} footer={footer}>
+      <ShiftOrderBanner />
       {selecting ? <SelectStep /> : <BrewingStep />}
     </Panel>
   )
