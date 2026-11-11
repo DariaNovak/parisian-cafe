@@ -45,9 +45,24 @@ The app needs no network access at runtime: fonts, models, textures, the environ
 | Sit at a table | Click a table → camera moves there → **Drop sugar cubes** |
 | Other interactions | Click the **door** to open/close it, click **flowers** to make them bounce and shed petals |
 | Order | **Order** button → adjust quantities / remove → **Confirm order** |
-| Sound | Speaker button toggles a synthesized café ambience and UI sounds |
+| Sound & music | The speaker button opens a menu with separate switches for **Music** (with a volume slider), **Café ambience** and **Sound effects**, plus *Mute everything*. Press `M` to toggle the music. Your choices are remembered. The music is “Parisian” by Kevin MacLeod (CC BY 4.0) |
 | Quality | Sliders button → Low / Medium / High (auto-detected on first load) |
 | Close | `Esc` closes a panel, then leaves a close-up |
+| Be the barista | **Be the barista** button → see *Barista shift* below; **End shift** shows your takings |
+
+### Barista shift
+
+You can explore the café as a guest, or switch roles at any time and work behind the counter. During a shift you see the café in first person, at the barista's eye height. You walk along the aisle between the **Till**, the **Espresso** machine and the **Pastries** cabinet, and you can drag to turn your head. The espresso machine faces the barista, as it would in a real bar.
+
+1. **Guests arrive.** People walk in from the street and queue at the till. Each one has a patience bar.
+2. **Take the order.** A guest who reaches the till rings the counter bell. Click the guest (or **Take the order** on the ticket): you jot the order on your pad and a soft chime confirms it. The ticket lists the drink, any latte-art wish (heart, rosetta, tulip) and an optional dessert.
+3. **Prepare it.** **Brew** takes you to the espresso machine with the drink and its cup preselected. **Fetch** opens the pâtisserie. Everything you make lands on the serving tray, and you walk back to the till.
+4. **Serve and get paid.** **Serve & get paid** hands over the tray. The guest pays the menu price plus a tip that depends on how quickly they were served and whether their latte-art wish came true. They rate the visit from 1 to 5 stars, then sit at a free table with their cup and leave after a while.
+5. **Mind the queue.** Serving the wrong order costs patience. A guest who waits too long walks out, which counts as a 1-star rating.
+
+Earnings, guests served and the average rating appear in the top bar. **End shift** shows a summary.
+
+Passers-by walk along both pavements, and regulars sit at a few tables, whichever mode you are in.
 
 ---
 
@@ -87,7 +102,9 @@ src/
 │   ├── coffee/          drink/cup data, brew state machine, coffee station
 │   ├── desserts/        dessert data, selection store, "order dessert" action
 │   ├── navigation/      camera viewpoints and limits
-│   └── ordering/        order store, pricing
+│   ├── ordering/        order store, pricing
+│   ├── people/          procedural looks, walk routes & seats, street life
+│   └── shift/           barista game: guests, queue, patience, tray, payment
 ├── materials/           shared PBR materials + procedural canvas textures
 ├── models/              scene objects (building, interior, furniture, …)
 │   └── builders/        procedural GLB sources (also used as a runtime fallback)
@@ -184,3 +201,9 @@ To swap in higher-fidelity models (e.g. from Poly Haven / Sketchfab — check ea
 - Verified in Chromium (Microsoft Edge) at desktop (1280–1600 px), tablet (820 × 1180) and phone (390 × 844) sizes. It should run in any WebGL2 browser. Phones get a responsive fallback with a bottom-sheet UI; Low quality is auto-selected on touch devices.
 - Two console warnings come from dependencies, not app code: R3F's internal use of the deprecated `THREE.Clock`, and Rapier's WASM init signature.
 - N8AO's half-resolution mode is disabled: it uses `WebGLMultipleRenderTargets`, which three r172+ removed. Full-resolution N8AO works normally.
+
+## Credits
+
+- Music: **“Parisian”** by Kevin MacLeod ([incompetech.com](https://incompetech.com)), licensed under [Creative Commons: By Attribution 4.0](https://creativecommons.org/licenses/by/4.0/).
+- Sound effects: [Mixkit](https://mixkit.co/free-sound-effects/), [Mixkit Sound Effects Free License](https://mixkit.co/license/#sfxFree). The per-file list is in [`public/sounds/CREDITS.md`](public/sounds/CREDITS.md).
+- If a sound file fails to load, the app plays its own synthesised version instead. That includes an original musette waltz in place of the music.
